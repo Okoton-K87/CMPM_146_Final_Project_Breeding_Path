@@ -20,7 +20,6 @@ def bfs(graph, initial_pals, target_pal, time_limit=3):
     while queue:
         # Check if the time limit has been exceeded
         if time.time() - start_time > time_limit:
-            # print("Time limit exceeded. No path found.")
             return None
         
         current_pals, path = queue.popleft()
@@ -41,37 +40,44 @@ def bfs(graph, initial_pals, target_pal, time_limit=3):
                             new_path = path + [(pal, other_parent, result)]
                             new_pals = current_pals + [result]
 
-                            # print(f"Exploring: {pal} + {other_pal} = {result}, New Pals: {new_pals}")
-
-                            # Check if we have reached the target
                             if result == target_pal:
-                                # print(f"Target reached with {new_path}")
                                 return new_path
 
-                            # Add the new state to the queue even if result is already in current_pals
                             queue.append((new_pals, new_path))
     
-    # print("No path found within the time limit.")
     return None  # No path found
 
-# if __name__ == "__main__":
-#     with open('breeding_graph.json', 'r') as f:
-#         graph = json.load(f)
+def possible(initial_pals, graph):
+    """
+    Performs search to find all possible breedable children from the initial_pals.
+    Returns a list of all possible children.
+    """
+    queue = deque([initial_pals])
+    visited = set(tuple(initial_pals))
+    possible_children = set()
     
-#     # # Example lists of pets the player currently has
-#     # initial_pals = ["Lamball", "Lifmunk"]
+    while queue:
+        current_pals = queue.popleft()
+        
+        for i in range(len(current_pals)):
+            for j in range(i + 1, len(current_pals)):
+                pal1 = current_pals[i]
+                pal2 = current_pals[j]
+                
+                if pal1 in graph:
+                    for offspring in graph[pal1]:
+                        if offspring == pal2 or offspring not in graph[pal1]:
+                            continue
+                        if pal2 == offspring[0]:
+                            new_offspring = offspring[1]
+                            
+                            if new_offspring not in possible_children:
+                                possible_children.add(new_offspring)
+                                new_combination = current_pals + [new_offspring]
+                                new_combination_tuple = tuple(sorted(new_combination))
+                                
+                                if new_combination_tuple not in visited:
+                                    visited.add(new_combination_tuple)
+                                    queue.append(new_combination)
     
-#     # # Example target Pals
-#     # # target = "Jolthog"
-#     # # target = "Gumoss"
-#     # target = "Nitewing"
-#     # # target = "Blazehowl"  # Try getting Blazehowl from a pool of Gumoss, Tombat, and Nitewing
-
-#     initial_pals = ["Lamball", "Lifmunk", "Chikipi", "Kitsun"]  # Example list of pets the player currently has
-#     target = "Leezpunk"
-
-#     path = bfs(graph, initial_pals, target)
-#     if path:
-#         print("BFS Path:", " -> ".join([f"{p[0]} + {p[1]} = {p[2]}" for p in path]))
-#     else:
-#         print(f"No path found to breed {target} with the current Pals")
+    return list(possible_children)

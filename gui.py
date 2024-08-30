@@ -1,6 +1,6 @@
 import tkinter as tk
 from tkinter import messagebox
-from bfs_search import bfs
+from bfs_search import bfs, possible
 from validation import load_breeding_data, validate_pals, load_breeding_graph
 from visualize import build_binary_tree, visualize_binary_tree
 import os
@@ -46,6 +46,22 @@ def visualize_breeding_tree():
     else:
         messagebox.showerror("Error", "Failed to generate the breeding tree image.")
 
+# Function to find all possible children from the initial Pals
+def find_possible_children():
+    initial_pals = initial_pals_var.get().split(", ")
+    
+    # Validate the entered Pals
+    is_valid, invalid_pals = validate_pals(initial_pals, breeding_data)
+    
+    if not is_valid:
+        result = f"Invalid Pals found: {', '.join(invalid_pals)}"
+        result_label.config(text=result)
+        return
+    
+    children = possible(initial_pals, graph)
+    result = f"Possible Children: {', '.join(children)}"
+    result_label.config(text=result)
+
 # Set up the main GUI window
 root = tk.Tk()
 root.title("Pal Breeding Path Finder")
@@ -61,6 +77,9 @@ tk.Label(root, text="Enter Your Target Pal:").pack()
 target_pal_var = tk.StringVar(value="Leezpunk")
 target_pal_entry = tk.Entry(root, textvariable=target_pal_var, width=50)
 target_pal_entry.pack()
+
+# Button to find possible children
+tk.Button(root, text="Find Possible Children", command=find_possible_children).pack()
 
 # Button to start the breeding path search
 tk.Button(root, text="Find Breeding Path", command=start_breeding).pack()
